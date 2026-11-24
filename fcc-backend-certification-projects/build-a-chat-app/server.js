@@ -4,14 +4,22 @@ import { WebSocketServer, WebSocket } from 'ws';
 
 const PORT = 3001;
 
+// Serve the page and its script; every other path falls back to the page.
+const STATIC_FILES = {
+  '/script.js': { file: './public/script.js', type: 'application/javascript' },
+};
+
 const server = http.createServer((req, res) => {
-  fs.readFile('./public/index.html', (err, data) => {
+  const { pathname } = new URL(req.url, 'http://localhost');
+  const { file, type } = STATIC_FILES[pathname] || { file: './public/index.html', type: 'text/html' };
+
+  fs.readFile(file, (err, data) => {
     if (err) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end('Error loading index.html');
+      res.end(`Error loading ${file}`);
       return;
     }
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.writeHead(200, { 'Content-Type': type });
     res.end(data);
   });
 });
